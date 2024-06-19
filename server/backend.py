@@ -1,13 +1,35 @@
 # De functie van deze module is het authenticeren van admins.
 
+import smtplib
 import sqlite3
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from functools import wraps
 
 from fastapi import responses, status, HTTPException
+from pydantic import BaseModel
 
 from setup import load_config
 
 config = load_config()
+
+
+class AdminLoginField(BaseModel):
+    email: str
+    password: str
+
+
+class AdminSignupField(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class EmailField(BaseModel):
+    receiver: str
+    title: str
+    text_body: str = None
+    html_body: str = None
 
 
 class Functionality:
@@ -28,19 +50,19 @@ class AdminAuth:
             if type(admin_id) is int:
                 return func(*args, **kwargs)
             else:
-                raise HTTPException(status.HTTP_401_UNAUTHORIZED, "You must be logged in to view or make changes.")
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                                    "You must be logged in as an admin to view content or make changes.")
 
         return wrapper
 
     @classmethod
-    def create_admin_account(cls, admin_name: str, email: str, password: str):
+    def create_admin_account(cls, admin_signup_info: AdminSignupField):
         with sqlite3.connect("database.db") as conn:
             c = conn.cursor()
-
             c.execute(
                 f"""
                 INSERT OR IGNORE INTO admins (admin_name, email, password, banned)
-                VALUES ('{admin_name}', '{email}', '{password}', '0')
+                VALUES ('{admin_signup_info.name}', '{admin_signup_info.email}', '{admin_signup_info.password}', '0')
                 """
             )
             conn.commit()
@@ -58,8 +80,11 @@ class AdminAuth:
             return False
 
     @classmethod
-    def create_session(cls, ip: str, email: str, password: str):
-        cls.validate_credentials(email=email, password=password)
+    def create_session(cls, ip: str, admin_login_info: AdminLoginField):  # login functie
+        email = admin_login_info.email
+        valid = cls.validate_credentials(admin_login_info=admin_login_info)
+        if valid is not True:
+            return valid
 
         with sqlite3.connect("database.db") as conn:
             c = conn.cursor()
@@ -71,7 +96,7 @@ class AdminAuth:
             else:
                 print("ALREADY LOGGED IN")
 
-        return responses.Response(content=f"Successfully logged `{email}` in", status_code=status.HTTP_200_OK)
+        return responses.Response(content=f"Successfully login for`{email}`", status_code=status.HTTP_200_OK)
 
     @classmethod
     def admin_account_is_banned(cls, admin_id):
@@ -107,10 +132,10 @@ class AdminAuth:
             return output[0]
 
     @classmethod
-    def validate_credentials(cls, email: str, password: str):
+    def validate_credentials(cls, admin_login_info: AdminLoginField):
         with sqlite3.connect("database.db") as conn:
             c = conn.cursor()
-            c.execute(f"SELECT password, banned FROM admins WHERE email='{email}'")
+            c.execute(f"SELECT password, banned FROM admins WHERE email='{admin_login_info.email}'")
             output = c.fetchone()
 
         if output is None:  # wanneer het admin_account niet bestaat
@@ -123,7 +148,7 @@ class AdminAuth:
         if banned:
             print("admin_account is verbannen")
             raise HTTPException(status.HTTP_403_FORBIDDEN)
-        if password != correct_password:
+        if admin_login_info.password != correct_password:
             print("verkeerd wachtwoord")
             raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
@@ -151,3 +176,50 @@ class AdminAuth:
                 c.execute(f"INSERT INTO ips (ip_address, request_count, banned) VALUES ('{ip}', 1, 0)")
                 conn.commit()
                 return True
+
+
+class Email:
+
+    @classmethod
+    def send(cls, mail_info: EmailField):
+        debug = {}
+
+        receiver, title, text_body, html_body = (
+            mail_info.receiver,
+            mail_info.title,
+            mail_info.text_body,
+            mail_info.html_body
+        )
+
+        host, port, syst_addr, password = config["system_email"]["host"], config["system_email"]["port"], \
+            config["system_email"]["addr"], config["system_email"]["pass"]
+
+        msg = MIMEMultipart('alternative')
+        msg["Subject"] = title
+        msg["From"] = syst_addr
+        msg["To"] = receiver
+
+        if all([text_body, html_body]):
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "You must either provide text or html content. Not both.")
+
+        if html_body:
+            print("HTML:", html_body)
+            msg.attach(MIMEText(html_body, 'html'))
+        else:
+            print("TEXT:", text_body)
+            msg.set_payload(text_body)
+
+        smtp = smtplib.SMTP(host=host, port=port)
+
+        debug["echlo"] = smtp.ehlo()
+        print("echlo:", debug["echlo"])
+        debug["tls"] = smtp.starttls()
+        print("tls:", debug["tls"])
+        debug["login"] = smtp.login(user=syst_addr, password=password)
+        print("login:", debug["login"])
+        debug["send"] = smtp.sendmail(from_addr=syst_addr, to_addrs=receiver, msg=msg.as_string())
+        print("send!")
+
+        smtp.quit()
+
+        return debug

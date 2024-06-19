@@ -7,15 +7,15 @@ def setup():
         c.execute(
             """
             CREATE TABLE IF NOT EXISTS admins(
-                admin_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                admin_name text NOT NULL,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name text NOT NULL,
                 email text NOT NULL UNIQUE,
                 password text NOT NULL,
                 banned INTEGER NOT NULL
             );
             """
         )
-        
+
         c.execute(
             """
             CREATE TABLE IF NOT EXISTS user_data(
@@ -54,10 +54,10 @@ def setup():
         c.execute(
             """
             CREATE TABLE IF NOT EXISTS logins(
-                admin_id INTEGER NOT NULL PRIMARY KEY,
+                id INTEGER NOT NULL PRIMARY KEY,
                 ip_address text,
                 FOREIGN KEY(ip_address) REFERENCES ips(ip_address),
-                FOREIGN KEY(admin_id) REFERENCES admins(admin_id)
+                FOREIGN KEY(id) REFERENCES admins(id)
             );
             """
         )
