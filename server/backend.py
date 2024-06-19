@@ -33,12 +33,18 @@ class EmailField(BaseModel):
 
 
 class Functionality:
+    def __init__(self):
+        pass
+
     # @classmethod
     # def
+
     ...
 
 
 class AdminAuth:
+    def __init__(self):
+        pass
 
     @classmethod  # Bedoeld als decorator functie. Voeg toe aan endpoint wanneer als admin ingelogd moet zijn.
     def auth_required(cls, func):
@@ -179,17 +185,25 @@ class AdminAuth:
 
 
 class Email:
+    def __init__(self, email_field: EmailField):
+        self.receiver = email_field.receiver
+        self.title = email_field.title
+        self.text_body = email_field.text_body
+        self.html_body = email_field.html_body
 
-    @classmethod
-    def send(cls, mail_info: EmailField):
+    def send(self):
+        #  voorbereiding
         debug = {}
 
         receiver, title, text_body, html_body = (
-            mail_info.receiver,
-            mail_info.title,
-            mail_info.text_body,
-            mail_info.html_body
+            self.receiver,
+            self.title,
+            self.text_body,
+            self.html_body
         )
+
+        if text_body and html_body:  # Mag alleen 1 van de twee in vullen. Niet beide.
+            raise HTTPException(status.HTTP_400_BAD_REQUEST, "You must either provide text or html content. Not both.")
 
         host, port, syst_addr, password = config["system_email"]["host"], config["system_email"]["port"], \
             config["system_email"]["addr"], config["system_email"]["pass"]
@@ -198,9 +212,6 @@ class Email:
         msg["Subject"] = title
         msg["From"] = syst_addr
         msg["To"] = receiver
-
-        if all([text_body, html_body]):
-            raise HTTPException(status.HTTP_400_BAD_REQUEST, "You must either provide text or html content. Not both.")
 
         if html_body:
             print("HTML:", html_body)
@@ -211,6 +222,7 @@ class Email:
 
         smtp = smtplib.SMTP(host=host, port=port)
 
+        # verzend proces met debug
         debug["echlo"] = smtp.ehlo()
         print("echlo:", debug["echlo"])
         debug["tls"] = smtp.starttls()
