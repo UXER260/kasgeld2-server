@@ -1,8 +1,12 @@
 import sqlite3
 
+from setup import load_config
+
+config = load_config()
+
 
 def setup():
-    with sqlite3.connect("database.db") as conn:
+    with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
         c.execute(
             """
@@ -24,8 +28,6 @@ def setup():
                 creation_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
                 money REAL NOT NULL,
                 last_salary_date TEXT DEFAULT (CURRENT_TIMESTAMP)
-                
-                
             );
             """
         )
@@ -35,10 +37,11 @@ def setup():
             CREATE TABLE IF NOT EXISTS transactions(
                 title TEXT NOT NULL,
                 description TEXT NOT NULL,
-                saldo_after_transaction REAL NOT NULL,
+                amount REAL NOT NULL,
+                saldo_before_transaction REAL NOT NULL,
                 date_time TEXT CURRENT_TIMESTAMP
             );
-            """
+            """  # amount: ± geld
         )
 
         c.execute(
@@ -54,11 +57,18 @@ def setup():
         c.execute(
             """
             CREATE TABLE IF NOT EXISTS logins(
-                id INTEGER NOT NULL PRIMARY KEY,
+                admin_id INTEGER NOT NULL PRIMARY KEY,
                 ip_address text,
                 FOREIGN KEY(ip_address) REFERENCES ips(ip_address),
-                FOREIGN KEY(id) REFERENCES admins(id)
+                FOREIGN KEY(admin_id) REFERENCES admins(id)
             );
+            """
+        )
+
+        c.execute(
+            """
+            INSERT OR IGNORE INTO admins (name, email, password, banned) VALUES
+            ("Camillo de Jong", "cydejong@icloud.com", "123@K@sg3ld!", 0);
             """
         )
 
