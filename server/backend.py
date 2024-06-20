@@ -53,6 +53,10 @@ class AdminAuth:
             ip = kwargs["request"].client.host
             print("ip:", ip)
             admin_id = cls.admin_id_if_session_valid(ip=ip)
+            # if type(admin_id) is dict:
+            #     AdminAuth.logout_id(admin_id=admin_id["banned"]["id"])
+            #     raise HTTPException(status.HTTP_403_FORBIDDEN)
+            # el \
             if type(admin_id) is int:
                 return func(*args, **kwargs)
             else:
@@ -62,13 +66,53 @@ class AdminAuth:
         return wrapper
 
     @classmethod
-    def create_admin_account(cls, admin_signup_info: AdminSignupField):
-        with sqlite3.connect("database.db") as conn:
+    def logout_id(cls, admin_id):  # logt overal op elk IP uit
+        with sqlite3.connect(config["database_path"]) as conn:
+            c = conn.cursor()
+            print("ADMIN_ID:", admin_id)
+            c.execute(
+                f"""
+                DELETE FROM logins where admin_id={admin_id};
+                """
+            )
+            conn.commit()
+        return True
+
+    @classmethod
+    def logout_ip(cls, ip: str):  # logt alleen op een specifiek IP uit
+        with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
             c.execute(
                 f"""
-                INSERT OR IGNORE INTO admins (admin_name, email, password, banned)
-                VALUES ('{admin_signup_info.name}', '{admin_signup_info.email}', '{admin_signup_info.password}', '0')
+                    DELETE FROM logins where ip={ip};
+                    """
+            )
+            conn.commit()
+        return True
+
+    @classmethod
+    def admin_name_by_id(cls, admin_id):
+        with sqlite3.connect(config["database_path"]) as conn:
+            c = conn.cursor()
+            c.execute(
+                f"""
+                SELECT name FROM admins WHERE id="{admin_id}"
+                """
+            )
+            output = c.fetchone()
+            if not output:
+                return False
+            else:
+                return output[0]
+
+    @classmethod
+    def create_admin_account(cls, admin_signup_info: AdminSignupField):
+        with sqlite3.connect(config["database_path"]) as conn:
+            c = conn.cursor()
+            c.execute(
+                f"""
+                INSERT OR IGNORE INTO admins (name, email, password, banned)
+                VALUES ("{admin_signup_info.name}", "{admin_signup_info.email}", "{admin_signup_info.password}", '0')
                 """
             )
             conn.commit()
@@ -76,7 +120,7 @@ class AdminAuth:
 
     @classmethod
     def admin_id_if_logged_in(cls, ip: str):  # Geeft het admin_id alleen wanneer de admin is ingelogd
-        with sqlite3.connect("database.db") as conn:
+        with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
             c.execute(f"SELECT admin_id FROM logins WHERE ip_address='{ip}'")
             output = c.fetchone()
@@ -92,11 +136,11 @@ class AdminAuth:
         if valid is not True:
             return valid
 
-        with sqlite3.connect("database.db") as conn:
+        with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
             admin_id = cls.admin_id_by_email(email=email)
             already_logged_in = cls.admin_id_if_session_valid(ip=ip)
-            if already_logged_in is False:
+            if not already_logged_in:
                 c.execute(f"INSERT INTO logins (ip_address, admin_id) VALUES ('{ip}', '{admin_id}')")
                 conn.commit()
             else:
@@ -106,10 +150,10 @@ class AdminAuth:
 
     @classmethod
     def admin_account_is_banned(cls, admin_id):
-        with sqlite3.connect("database.db") as conn:
+        with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
 
-            c.execute(f"SELECT banned FROM admins WHERE admin_id='{admin_id}'")
+            c.execute(f"SELECT banned FROM admins WHERE id='{admin_id}'")
             output = c.fetchone()
             print(output)
             if output is not None:
@@ -122,15 +166,15 @@ class AdminAuth:
             return False
         banned = cls.admin_account_is_banned(admin_id=admin_id)
         if banned:
-            return False
+            return {"banned": {"id": admin_id, "ip": ip}}
 
         return admin_id
 
     @classmethod
     def admin_id_by_email(cls, email: str):
-        with sqlite3.connect("database.db") as conn:
+        with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
-            c.execute(f"SELECT admin_id FROM admins WHERE email='{email}'")
+            c.execute(f"SELECT id FROM admins WHERE email='{email}'")
             output = c.fetchone()
         if output is None:
             return output
@@ -139,7 +183,7 @@ class AdminAuth:
 
     @classmethod
     def validate_credentials(cls, admin_login_info: AdminLoginField):
-        with sqlite3.connect("database.db") as conn:
+        with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
             c.execute(f"SELECT password, banned FROM admins WHERE email='{admin_login_info.email}'")
             output = c.fetchone()
@@ -163,7 +207,7 @@ class AdminAuth:
 
     @classmethod
     def log_and_validate_ip(cls, ip: str):
-        with sqlite3.connect("database.db") as conn:
+        with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
             c.execute(f"SELECT request_count, banned from ips WHERE ip_address='{ip}'")
             data = c.fetchone()
