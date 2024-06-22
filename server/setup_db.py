@@ -1,6 +1,6 @@
 import sqlite3
 
-from setup import load_config
+from main import load_config
 
 config = load_config()
 
