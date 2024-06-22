@@ -1,4 +1,22 @@
 import json
+from pydantic import BaseModel
+import sqlite3
+from fastapi import FastAPI, Request, responses, status, HTTPException
+
+
+class AdminLoginField(BaseModel):
+    email: str
+    password: str
+
+
+class AdminSignupField(BaseModel):
+    name: str
+    email: str
+    password: str
+
+
+class AccountData(BaseModel):
+    ...
 
 
 def load_config(path="config.json"):
@@ -17,13 +35,13 @@ def load_config(path="config.json"):
     return conf
 
 
+config = load_config()
+
 if __name__ == "__main__":
     import uvicorn
 
     import setup_db
-    from endpoints import *
-
-    config = load_config()
+    import endpoints
 
     DEFAULT_CONFIG = """  
 
@@ -34,7 +52,7 @@ if __name__ == "__main__":
       "month_salary_blacklist": [7, 8],
       "salary_amount": 5,
 
-      "banned_list_is_whitelist": false,
+      "banned_list_is_whitelist": false,∑∑
 
       "system_email": {
         "addr": "uxer260@outlook.com",
@@ -48,4 +66,4 @@ if __name__ == "__main__":
 
     setup_db.setup()
 
-    uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
+    uvicorn.run(endpoints.app, host=config["host"], port=config["port"], log_level="info")
