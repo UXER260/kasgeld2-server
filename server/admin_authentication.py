@@ -1,16 +1,20 @@
 # De functie van deze module is het authenticeren van admins.
-
+import json
 from functools import wraps
 from main import *
 
 
 # Bedoeld als decorator functie. Voeg toe aan endpoint wanneer als admin ingelogd moet zijn.
 def auth_required(func):
+    # (use_)optional_admin_login_info kan worden meegegeven voor het geval dat de #todo login is vervallen
+    # dit kan benut worden om als client geen onverwachtse error responses terug te krijgen
     @wraps(func)
     def wrapper(*args, **kwargs):
         ip = kwargs["request"].client.host
-        print("ip:", ip)
-        admin_id = admin_id_if_login_valid(ip=ip)
+        # converteer json string "true" of "false" naar python bool `True` of `False`
+        kwargs["use_optional_admin_login_info"] = json.loads(kwargs["use_optional_admin_login_info"])
+        admin_id = admin_id_if_login_valid(ip=ip, optional_admin_login_info=kwargs["optional_admin_login_info"],
+                                           use_optional_admin_login_info=kwargs["use_optional_admin_login_info"])
         if type(admin_id) is int:
             return func(*args, **kwargs)
 
@@ -27,7 +31,7 @@ def logout_id(admin_id):  # logt overal op elk IP uit
             """
         )
         conn.commit()
-    return True
+    return responses.Response(status_code=status.HTTP_200_OK)
 
 
 def logout_ip(ip: str):  # logt alleen op een specifiek IP uit
@@ -35,11 +39,11 @@ def logout_ip(ip: str):  # logt alleen op een specifiek IP uit
         c = conn.cursor()
         c.execute(
             f"""
-                DELETE FROM logins where ip={ip};
+                DELETE FROM logins where ip_address="{ip}";
                 """
         )
         conn.commit()
-    return True
+    return responses.Response(status_code=status.HTTP_200_OK)
 
 
 def admin_name_by_id(admin_id):
@@ -67,7 +71,7 @@ def create_admin_account(admin_signup_info: AdminSignupField):
             """
         )
         conn.commit()
-    return True
+    return responses.Response(status_code=status.HTTP_200_OK)
 
 
 def admin_id_by_login(ip: str) -> None | str:  # Geeft het admin_id alleen wanneer de admin is ingelogd
@@ -90,6 +94,8 @@ def create_login(ip: str, admin_login_info: AdminLoginField):  # login functie
 
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
+        # hoeft niet te checken of niet None omdat bestaan van account al is gecheckt bij
+        # `valid = validate_credentials(admin_login_info=admin_login_info)` (aan begin van functie)
         admin_id = admin_id_by_email(email=email)
         already_logged_in = admin_id_by_login(ip=ip)
         if not already_logged_in:
@@ -101,7 +107,7 @@ def create_login(ip: str, admin_login_info: AdminLoginField):  # login functie
     return responses.Response(content=f"Successfully login for`{email}`", status_code=status.HTTP_200_OK)
 
 
-def admin_account_is_banned(admin_id):
+def check_admin_account_banned(admin_id):
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
 
@@ -112,15 +118,19 @@ def admin_account_is_banned(admin_id):
             return output[0] == 1
 
 
-def admin_id_if_login_valid(ip):
+def admin_id_if_login_valid(ip, optional_admin_login_info=None, use_optional_admin_login_info: bool = False):
+    if use_optional_admin_login_info is True:
+        create_login(ip=ip, admin_login_info=optional_admin_login_info)
     admin_id = admin_id_by_login(ip=ip)
-    if not admin_id:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
-                            "You must be logged in as an admin to view content or make changes.")
-    banned = admin_account_is_banned(admin_id=admin_id)
+    banned = check_admin_account_banned(admin_id=admin_id)
     if banned:
         logout_id(admin_id=admin_id)
         raise HTTPException(status.HTTP_403_FORBIDDEN)
+    if not admin_id:
+        raise HTTPException(
+            status.HTTP_401_UNAUTHORIZED,
+            "You must be logged in as an admin to view content or make changes."
+        )
 
     return admin_id
 
@@ -131,7 +141,7 @@ def admin_id_by_email(email: str):
         c.execute(f"SELECT id FROM admins WHERE email='{email}'")
         output = c.fetchone()
     if output is None:
-        return output
+        return None
     else:
         return output[0]
 
@@ -160,23 +170,3 @@ def validate_credentials(admin_login_info: AdminLoginField):
     return True
 
 
-def log_and_validate_ip(ip: str):
-    with sqlite3.connect(config["database_path"]) as conn:
-        c = conn.cursor()
-        c.execute(f"SELECT request_count, banned from ips WHERE ip_address='{ip}'")
-        data = c.fetchone()
-
-        if data:
-            request_count, banned = data
-            banned = banned == 1
-            banned = banned if not config["banned_list_is_whitelist"] else (not banned)
-            if not banned:
-                c.execute(f"UPDATE ips SET request_count={request_count + 1} WHERE ip_address='{ip}';")
-                conn.commit()
-                return True
-            else:
-                return False
-        else:
-            c.execute(f"INSERT INTO ips (ip_address, request_count, banned) VALUES ('{ip}', 1, 0)")
-            conn.commit()
-            return True
