@@ -1,4 +1,5 @@
 # TODO: Schrijf logout functie
+import time
 
 import admin_authentication
 from main import *
@@ -28,33 +29,46 @@ def log_and_validate_ip(ip: str):
             return True
 
 
-async def middleware(request: Request, next_call):
-    # todo: validate ip
-    ip = request.client.host
-    ip_allowed_acces = log_and_validate_ip(ip=ip)
+def manage_login_expires():
+    with open(config["last_session_wipe_path"]) as f:
+        last_session_wipe = json.load(f)
 
-    if not ip_allowed_acces:
-        return responses.RedirectResponse(
-            url="https://www.youtube.com/watch?v=oHg5SJYRHA0",
-            status_code=status.HTTP_403_FORBIDDEN
-        )
-        # return responses.Response(status_code=status.HTTP_403_FORBIDDEN)
-        # return responses.HTMLResponse(html.FORBIDDEN_PAGE)
+    time_since_session_wipe = int(time.time()) - last_session_wipe["timestamp"]
+    print(f"time_since last session wipe: {time_since_session_wipe}/{config['session_expire_time_seconds']} seconds")
+    if abs(time_since_session_wipe) > config["session_expire_time_seconds"]:  # langer dan vervaltijd ingelogd
+
+        with sqlite3.connect(config["database_path"]) as conn:
+            c = conn.cursor()
+            c.execute("DELETE FROM logins;")  # delete alle sessies
+
+        with open(config["last_session_wipe_path"], 'w') as f:
+            last_session_wipe["timestamp"] = int(time.time())
+            print(last_session_wipe)
+            json.dump(last_session_wipe, f)
+
+        print("wiped all logins")
+
+
+async def middleware(request: Request, next_call):
+    if not log_and_validate_ip(ip=request.client.host):
+        return responses.RedirectResponse("https://www.youtube.com/watch?v=oHg5SJYRHA0", status.HTTP_403_FORBIDDEN)
+
+    manage_login_expires()
 
     response = await next_call(request)
 
-    # na manipuleer response
-    # print(response)
-
+    # starlette.middleware.base._StreamingResponse
+    print("HEADERS:", dict(response.headers))
     return response
 
 
 app.middleware("http")(middleware)
 
 
-@app.get("/")
+@app.post("/")
 @admin_authentication.auth_required
-def home(request: Request, optional_admin_login_info: None | AdminLoginField, use_optional_admin_login_info: bool):
+def home(request: Request, optional_admin_login_info: None | AdminLoginField,
+         use_optional_admin_login_info: bool = False):
     admin_id = admin_authentication.admin_id_if_login_valid(ip=request.client.host)
     if not admin_id:
         raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -77,7 +91,8 @@ def add_account_to_file(account_info: AccountData, request: Request):  # obvious
 @app.post("/admin/add_account")
 @admin_authentication.auth_required
 def backend_add_admin_account(admin_signup_info: AdminSignupField, request: Request,
-                              optional_admin_login_info: None | AdminLoginField, use_optional_admin_login_info=False):
+                              optional_admin_login_info: None | AdminLoginField,
+                              use_optional_admin_login_info: bool = False):
     admin_authentication.create_admin_account(admin_signup_info=admin_signup_info)
     # backend_login(email=email, password=password, request=request)
     return responses.Response(content=f"Successfully created account", status_code=status.HTTP_200_OK)

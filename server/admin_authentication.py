@@ -1,6 +1,6 @@
 # De functie van deze module is het authenticeren van admins.
-import json
 from functools import wraps
+
 from main import *
 
 
@@ -11,8 +11,8 @@ def auth_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         ip = kwargs["request"].client.host
-        # converteer json string "true" of "false" naar python bool `True` of `False`
-        kwargs["use_optional_admin_login_info"] = json.loads(kwargs["use_optional_admin_login_info"])
+        # json string "true" of "false" is al geconverteerd naar python bool `True` of `False`
+        kwargs["use_optional_admin_login_info"] = kwargs["use_optional_admin_login_info"]
         admin_id = admin_id_if_login_valid(ip=ip, optional_admin_login_info=kwargs["optional_admin_login_info"],
                                            use_optional_admin_login_info=kwargs["use_optional_admin_login_info"])
         if type(admin_id) is int:
@@ -100,9 +100,9 @@ def create_login(ip: str, admin_login_info: AdminLoginField):  # login functie
         already_logged_in = admin_id_by_login(ip=ip)
         if not already_logged_in:
             c.execute(f"INSERT INTO logins (ip_address, admin_id) VALUES ('{ip}', '{admin_id}')")
-            conn.commit()
         else:
             print("ALREADY LOGGED IN")
+        conn.commit()
 
     return responses.Response(content=f"Successfully login for`{email}`", status_code=status.HTTP_200_OK)
 
@@ -119,18 +119,20 @@ def check_admin_account_banned(admin_id):
 
 
 def admin_id_if_login_valid(ip, optional_admin_login_info=None, use_optional_admin_login_info: bool = False):
-    if use_optional_admin_login_info is True:
-        create_login(ip=ip, admin_login_info=optional_admin_login_info)
     admin_id = admin_id_by_login(ip=ip)
-    banned = check_admin_account_banned(admin_id=admin_id)
-    if banned:
-        logout_id(admin_id=admin_id)
-        raise HTTPException(status.HTTP_403_FORBIDDEN)
-    if not admin_id:
-        raise HTTPException(
-            status.HTTP_401_UNAUTHORIZED,
-            "You must be logged in as an admin to view content or make changes."
-        )
+
+    if not admin_id:  # als niet ingelogd
+        if use_optional_admin_login_info is True:
+            # (als niet is ingelogd of inlog is vervallen) MAAR er zijn inloggegevens meegegeven:
+            create_login(ip=ip, admin_login_info=optional_admin_login_info)
+        else:
+            raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                                "You are not logged in as an admin. Your session could have expired.")
+    else:  # hoeft alleen te checken of is ge-banned als ingelogd is
+        banned = check_admin_account_banned(admin_id=admin_id)
+        print("BANNED:", banned)
+        if banned:
+            raise HTTPException(status.HTTP_403_FORBIDDEN)
 
     return admin_id
 
@@ -168,5 +170,3 @@ def validate_credentials(admin_login_info: AdminLoginField):
 
     print("goed gekeurd!")
     return True
-
-

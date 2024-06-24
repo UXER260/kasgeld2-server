@@ -5,7 +5,8 @@
   "database_path": "database.db",
   "month_salary_blacklist": [7, 8],
   "salary_amount": 5,
-
+  "session_expire_time_seconds": 43200,
+  "last_session_wipe_path": "last_session_wipe.json",
   "banned_list_is_whitelist": false,
 
   "system_email": {

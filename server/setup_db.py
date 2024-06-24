@@ -1,4 +1,5 @@
 import sqlite3
+import time
 
 from main import load_config
 
@@ -8,6 +9,7 @@ config = load_config()
 def setup():
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
+
         c.execute(
             """
             CREATE TABLE IF NOT EXISTS admins(
@@ -72,6 +74,13 @@ def setup():
             """
         )
 
+        c.execute(
+            """
+            INSERT OR IGNORE INTO logins (admin_id, ip_address) VALUES
+            (1, "127.0.0.1");
+            """
+        )
+
         # # routines
         #
         # c.execute(
@@ -81,3 +90,5 @@ def setup():
         # )
 
         conn.commit()
+
+        load_config(path=config["last_session_wipe_path"], default_config={"timestamp": int(time.time())})
