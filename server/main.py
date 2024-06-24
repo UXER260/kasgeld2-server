@@ -1,7 +1,10 @@
 import json
-from pydantic import BaseModel
+# noinspection PyUnresolvedReferences
 import sqlite3
+
+# noinspection PyUnresolvedReferences
 from fastapi import FastAPI, Request, responses, status, HTTPException
+from pydantic import BaseModel
 
 
 class AdminLoginField(BaseModel):
@@ -19,7 +22,29 @@ class AccountData(BaseModel):
     ...
 
 
-def load_config(path="config.json"):
+DEFAULT_CONFIG = """  
+
+    {
+      "host": "0.0.0.0",
+      "port": 8000,
+      "accounts_path": "accounts.db",
+      "month_salary_blacklist": [7, 8],
+      "salary_amount": 5,
+
+      "banned_list_is_whitelist": false,
+
+      "system_email": {
+        "addr": "uxer260@outlook.com",
+        "pass": "123@Ux3rz6o!",
+        "host": "smtp-mail.outlook.com",
+        "port": 587
+      }
+    }
+
+    """  # fallback
+
+
+def load_config(path="config.json", default_config: str | dict = DEFAULT_CONFIG):
     try:
         with open(path) as f:
             conf = json.load(f)
@@ -28,8 +53,8 @@ def load_config(path="config.json"):
 
         # maakt nieuwe configfile aan als het niet te vinden is
         with open(path, "w") as f:
-            f.write(DEFAULT_CONFIG)
-        conf = json.loads(DEFAULT_CONFIG)
+            json.dump(default_config, f) if type(default_config) is dict else f.write(default_config)
+        conf = default_config if type(default_config) is dict else json.loads(default_config)
 
     # print(f"Config at `{path}` loaded.")
     return conf
@@ -42,27 +67,6 @@ if __name__ == "__main__":
 
     import setup_db
     import endpoints
-
-    DEFAULT_CONFIG = """  
-
-    {
-      "host": "0.0.0.0",
-      "port": 8000,
-      "accounts_path": "accounts.db",
-      "month_salary_blacklist": [7, 8],
-      "salary_amount": 5,
-
-      "banned_list_is_whitelist": false,∑∑
-
-      "system_email": {
-        "addr": "uxer260@outlook.com",
-        "pass": "123@Ux3rz6o!",
-        "host": "smtp-mail.outlook.com",
-        "port": 587
-      }
-    }
-
-    """  # fallback
 
     setup_db.setup()
 
