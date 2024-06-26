@@ -1,5 +1,4 @@
 # TODO: Schrijf logout functie
-import time
 
 import admin_authentication
 from main import *
@@ -35,7 +34,7 @@ def manage_login_expires():
 
     time_since_session_wipe = int(time.time()) - last_session_wipe["timestamp"]
     print(f"time_since last session wipe: {time_since_session_wipe}/{config['session_expire_time_seconds']} seconds")
-    if abs(time_since_session_wipe) > config["session_expire_time_seconds"]:  # langer dan vervaltijd ingelogd
+    if abs(time_since_session_wipe) > config["session_expire_time_seconds"]:  # is langer dan vervaltijd ingelogd:
 
         with sqlite3.connect(config["database_path"]) as conn:
             c = conn.cursor()
@@ -51,6 +50,7 @@ def manage_login_expires():
 
 async def middleware(request: Request, next_call):
     if not log_and_validate_ip(ip=request.client.host):
+        # ip-adres is verbannen
         return responses.RedirectResponse("https://www.youtube.com/watch?v=oHg5SJYRHA0", status.HTTP_403_FORBIDDEN)
 
     manage_login_expires()
@@ -82,9 +82,28 @@ def home(request: Request, optional_admin_login_info: None | AdminLoginField,
 
 # endpoints voor kasgeld functionaliteit
 
+@app.get("/get_account_data")
+def get_account_data(username: str):
+    return backend.get_raw_user_data(username)
+
+
 @app.post("/add_account_to_file")
-def add_account_to_file(account_info: AccountData, request: Request):  # obvious
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED)
+def add_account_to_file(request: Request, user_data: AddUser, transaction_made_timestamp: float = None):
+    return backend.add_user(user_data=user_data, transaction_made_timestamp=transaction_made_timestamp)
+
+
+@app.delete("/delete_account")
+def delete_account(username, leave_transactions: bool = False):
+    return backend.delete_user(username, leave_transactions=leave_transactions)
+
+
+@app.post("/set_saldo")
+def set_saldo(username: str, transaction_info: TransactionField, transaction_made_timestamp: float = None):
+    backend.set_saldo(
+        username=username,
+        transaction_info=transaction_info,
+        transaction_made_timestamp=transaction_made_timestamp
+    )
 
 
 # endpoints voor admins
@@ -114,7 +133,7 @@ def backend_admin_login(request: Request):
 @app.get("/admin/global_logout")
 def backend_admin_login(request: Request):
     admin_id = admin_authentication.admin_id_by_login(ip=request.client.host)
-    if admin_id is None:
+    if admin_id is None:  # was al uitgelogd:
         return responses.Response(status_code=status.HTTP_200_OK)
     return admin_authentication.logout_id(
         admin_id=admin_id
