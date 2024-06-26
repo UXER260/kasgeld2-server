@@ -17,6 +17,7 @@ def setup():
                 name text NOT NULL,
                 email text NOT NULL UNIQUE,
                 password text NOT NULL,
+                creation_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
                 banned INTEGER NOT NULL
             );
             """
@@ -24,12 +25,12 @@ def setup():
 
         c.execute(
             """
-            CREATE TABLE IF NOT EXISTS user_data(
-                user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            CREATE TABLE IF NOT EXISTS users(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name text NOT NULL UNIQUE,
-                creation_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
-                money REAL NOT NULL,
-                last_salary_date TEXT DEFAULT (CURRENT_TIMESTAMP)
+                saldo REAL NOT NULL,
+                last_salary_update_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
+                creation_timestamp INTEGER DEFAULT (strftime('%s', 'now'))
             );
             """
         )
@@ -37,13 +38,16 @@ def setup():
         c.execute(
             """
             CREATE TABLE IF NOT EXISTS transactions(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 title TEXT NOT NULL,
                 description TEXT NOT NULL,
                 amount REAL NOT NULL,
-                saldo_before_transaction REAL NOT NULL,
-                date_time TEXT CURRENT_TIMESTAMP
+                saldo_after_transaction REAL NOT NULL,
+                transaction_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
+                user_id INTEGER NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES users(user_id)
             );
-            """  # amount: ± geld
+            """  # amount: ± geld, creation_timestamp: wanneer transactie was gemaakt
         )
 
         c.execute(
@@ -90,5 +94,5 @@ def setup():
         # )
 
         conn.commit()
-
+        
         load_config(path=config["last_session_wipe_path"], default_config={"timestamp": int(time.time())})

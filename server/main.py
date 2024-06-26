@@ -1,10 +1,14 @@
 import json
 # noinspection PyUnresolvedReferences
 import sqlite3
+# noinspection PyUnresolvedReferences
+import time
 
 # noinspection PyUnresolvedReferences
 from fastapi import FastAPI, Request, responses, status, HTTPException
 from pydantic import BaseModel
+
+from server import backend
 
 
 class AdminLoginField(BaseModel):
@@ -18,8 +22,23 @@ class AdminSignupField(BaseModel):
     password: str
 
 
-class AccountData(BaseModel):
-    ...
+class AddUser(BaseModel):
+    name: str
+    saldo: float
+
+
+class RawUserData(BaseModel):  # voor data direct uit database
+    user_id: int
+    name: str
+    saldo: float
+    last_salary_update_timestamp: int
+    creation_timestamp: int
+
+
+class TransactionField(BaseModel):
+    saldo_after_transaction: float
+    title: str
+    description: str
 
 
 DEFAULT_CONFIG = """  

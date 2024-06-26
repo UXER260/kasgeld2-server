@@ -46,7 +46,7 @@ def logout_ip(ip: str):  # logt alleen op een specifiek IP uit
     return responses.Response(status_code=status.HTTP_200_OK)
 
 
-def admin_name_by_id(admin_id):
+def admin_name_by_id(admin_id) -> str | None:
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
         c.execute(
@@ -55,10 +55,9 @@ def admin_name_by_id(admin_id):
             """
         )
         output = c.fetchone()
-        if not output:
-            return None
-        else:
-            return output[0]
+    if output:
+        return output[0]
+    return None  # gebruiker bestaat niet
 
 
 def create_admin_account(admin_signup_info: AdminSignupField):
@@ -74,16 +73,15 @@ def create_admin_account(admin_signup_info: AdminSignupField):
     return responses.Response(status_code=status.HTTP_200_OK)
 
 
-def admin_id_by_login(ip: str) -> None | str:  # Geeft het admin_id alleen wanneer de admin is ingelogd
+def admin_id_by_login(ip: str) -> int | None:  # Geeft het admin_id alleen wanneer de admin is ingelogd
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
         c.execute(f"SELECT admin_id FROM logins WHERE ip_address='{ip}'")
         output = c.fetchone()
-    if output is not None:
+    if output:
         return output[0]
-    else:
-        print("kan id niet vinden omdat admin niet is ingelogd")
-        return None
+    print("kan id niet vinden omdat admin niet is ingelogd")
+    return None
 
 
 def create_login(ip: str, admin_login_info: AdminLoginField):  # login functie
@@ -113,9 +111,10 @@ def check_admin_account_banned(admin_id):
 
         c.execute(f"SELECT banned FROM admins WHERE id='{admin_id}'")
         output = c.fetchone()
-        print(output)
-        if output is not None:
-            return output[0] == 1
+
+    if output:
+        return output[0] == 1
+    raise HTTPException(status.HTTP_404_NOT_FOUND, f"Admin met id `{admin_id}` bestaat niet")
 
 
 def admin_id_if_login_valid(ip, optional_admin_login_info=None, use_optional_admin_login_info: bool = False):
@@ -128,24 +127,25 @@ def admin_id_if_login_valid(ip, optional_admin_login_info=None, use_optional_adm
         else:
             raise HTTPException(status.HTTP_401_UNAUTHORIZED,
                                 "You are not logged in as an admin. Your session could have expired.")
-    else:  # hoeft alleen te checken of is ge-banned als ingelogd is
+    else:
         banned = check_admin_account_banned(admin_id=admin_id)
         print("BANNED:", banned)
         if banned:
             raise HTTPException(status.HTTP_403_FORBIDDEN)
+        # hoeft alleen te checken of is ge-banned als ingelogd is
 
     return admin_id
 
 
-def admin_id_by_email(email: str):
+def admin_id_by_email(email: str) -> int | None:
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
         c.execute(f"SELECT id FROM admins WHERE email='{email}'")
         output = c.fetchone()
-    if output is None:
-        return None
-    else:
+
+    if output:
         return output[0]
+    return None
 
 
 def validate_credentials(admin_login_info: AdminLoginField):
@@ -154,7 +154,7 @@ def validate_credentials(admin_login_info: AdminLoginField):
         c.execute(f"SELECT password, banned FROM admins WHERE email='{admin_login_info.email}'")
         output = c.fetchone()
 
-    if output is None:  # wanneer het admin_account niet bestaat
+    if output is None:  # wanneer het admin_account niet bestaat:
         print("admin_account bestaat niet")
         raise HTTPException(status.HTTP_401_UNAUTHORIZED)
 
