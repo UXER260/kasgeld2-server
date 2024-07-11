@@ -82,39 +82,77 @@ def home(request: Request, optional_admin_login_info: None | AdminLoginField,
 
 # endpoints voor kasgeld functionaliteit
 
-@app.get("/get_account_data")
-def get_account_data(username: str):
-    return backend.get_raw_user_data(username)
+@app.get("/get_userdata")
+def get_userdata(user_id: int):
+    return backend.get_raw_userdata(user_id=user_id)
 
 
-@app.post("/add_account_to_file")
-def add_account_to_file(request: Request, user_data: AddUser, transaction_made_timestamp: float = None):
-    return backend.add_user(user_data=user_data, transaction_made_timestamp=transaction_made_timestamp)
+@app.get("/get_userdata_by_username")
+def get_userdata_by_username(username: str):
+    return backend.get_raw_userdata(username=username)
 
 
-@app.delete("/delete_account")
-def delete_account(username, leave_transactions: bool = False):
-    return backend.delete_user(username, leave_transactions=leave_transactions)
+@app.post("/add_user")
+def add_user(request: Request, userdata: AddUser, transaction_made_timestamp: float = None):
+    return backend.add_user(userdata=userdata, transaction_made_timestamp=transaction_made_timestamp)
 
 
-@app.post("/set_saldo")
-def set_saldo(username: str, transaction_info: TransactionField, transaction_made_timestamp: float = None):
-    backend.set_saldo(
-        username=username,
-        transaction_info=transaction_info,
-        transaction_made_timestamp=transaction_made_timestamp
-    )
+@app.delete("/delete_user")
+def delete_user(user_id: int, leave_transactions: bool = False):
+    return backend.delete_user(user_id=user_id, leave_transactions=leave_transactions)
+
+
+@app.put("/set_saldo")
+def set_saldo(user_id: int, transaction_info: TransactionField, transaction_made_timestamp: float = None):
+    backend.set_saldo(user_id=user_id, transaction_info=transaction_info,
+                      transaction_made_timestamp=transaction_made_timestamp)
+
+
+@app.get("/get_username_list")
+# @admin_authentication.auth_required
+def get_username_list(request: Request, use_optional_admin_login_info: bool = False):
+    return backend.get_username_list()
+
+
+@app.get("/get_transaction_list")
+def get_transaction_list(user_id, request: Request):
+    return backend.get_transaction_list(user_id=user_id)
+
+
+@app.get("/get_user_exists_by_id")
+def get_user_exists_by_id(user_id: int, request: Request):
+    return bool(backend.username_if_exists(user_id=user_id))
+
+
+@app.get("/get_user_exists_by_username")
+def get_user_exists_by_username(username: str, request: Request):
+    return bool(backend.user_id_if_exists(username=username))
+
+
+@app.get("/get_username_by_id")
+def get_username_exists_by_id(user_id: int, request: Request):
+    return backend.username_if_exists(user_id=user_id)
+
+
+@app.get("/get_user_id_by_username")
+def get_user_id_by_username(username: str, request: Request):
+    return backend.user_id_if_exists(username=username)
+
+
+@app.put("/rename_user")
+def rename_user(request: Request, user_id: int, new_username: str):
+    return backend.rename_user(user_id=user_id, new_username=new_username)
 
 
 # endpoints voor admins
-@app.post("/admin/add_account")
+@app.post("/admin/add_user")
 @admin_authentication.auth_required
-def backend_add_admin_account(admin_signup_info: AdminSignupField, request: Request,
-                              optional_admin_login_info: None | AdminLoginField,
-                              use_optional_admin_login_info: bool = False):
+def backend_add_admin_user(admin_signup_info: AdminSignupField, request: Request,
+                           optional_admin_login_info: None | AdminLoginField,
+                           use_optional_admin_login_info: bool = False):
     admin_authentication.create_admin_account(admin_signup_info=admin_signup_info)
     # backend_login(email=email, password=password, request=request)
-    return responses.Response(content=f"Successfully created account", status_code=status.HTTP_200_OK)
+    return responses.Response(content=f"Successfully created user", status_code=status.HTTP_200_OK)
 
 
 @app.post("/admin/login")
@@ -138,5 +176,3 @@ def backend_admin_login(request: Request):
     return admin_authentication.logout_id(
         admin_id=admin_id
     )
-
-#     ...

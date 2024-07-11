@@ -7,6 +7,7 @@ config = load_config()
 
 
 def setup():
+    print(config)
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
 
