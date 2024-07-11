@@ -24,12 +24,7 @@ def auth_required(func):
 def logout_id(admin_id):  # logt overal op elk IP uit
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        print("ADMIN_ID:", admin_id)
-        c.execute(
-            f"""
-            DELETE FROM logins where admin_id={admin_id};
-            """
-        )
+        c.execute("DELETE FROM logins WHERE admin_id=?", (admin_id,))
         conn.commit()
     return responses.Response(status_code=status.HTTP_200_OK)
 
@@ -37,11 +32,7 @@ def logout_id(admin_id):  # logt overal op elk IP uit
 def logout_ip(ip: str):  # logt alleen op een specifiek IP uit
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        c.execute(
-            f"""
-                DELETE FROM logins where ip_address="{ip}";
-                """
-        )
+        c.execute("DELETE FROM logins WHERE ip_address=?", (ip,))
         conn.commit()
     return responses.Response(status_code=status.HTTP_200_OK)
 
@@ -49,11 +40,7 @@ def logout_ip(ip: str):  # logt alleen op een specifiek IP uit
 def admin_name_by_id(admin_id) -> str | None:
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        c.execute(
-            f"""
-            SELECT name FROM admins WHERE id="{admin_id}"
-            """
-        )
+        c.execute("SELECT name FROM admins WHERE id=?", (admin_id,))
         output = c.fetchone()
     if output:
         return output[0]
@@ -63,12 +50,10 @@ def admin_name_by_id(admin_id) -> str | None:
 def create_admin_account(admin_signup_info: AdminSignupField):
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        c.execute(
-            f"""
+        c.execute("""
             INSERT OR IGNORE INTO admins (name, email, password, banned)
-            VALUES ("{admin_signup_info.name}", "{admin_signup_info.email}", "{admin_signup_info.password}", '0')
-            """
-        )
+            VALUES (?, ?, ?, 0)
+        """, (admin_signup_info.name, admin_signup_info.email, admin_signup_info.password))
         conn.commit()
     return responses.Response(status_code=status.HTTP_200_OK)
 
@@ -76,7 +61,7 @@ def create_admin_account(admin_signup_info: AdminSignupField):
 def admin_id_by_login(ip: str) -> int | None:  # Geeft het admin_id alleen wanneer de admin is ingelogd
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        c.execute(f"SELECT admin_id FROM logins WHERE ip_address='{ip}'")
+        c.execute("SELECT admin_id FROM logins WHERE ip_address=?", (ip,))
         output = c.fetchone()
     if output:
         return output[0]
@@ -97,12 +82,12 @@ def create_login(ip: str, admin_login_info: AdminLoginField):  # login functie
         admin_id = admin_id_by_email(email=email)
         already_logged_in = admin_id_by_login(ip=ip)
         if not already_logged_in:
-            c.execute(f"INSERT INTO logins (ip_address, admin_id) VALUES ('{ip}', '{admin_id}')")
+            c.execute("INSERT INTO logins (ip_address, admin_id) VALUES (?, ?)", (ip, admin_id))
         else:
-            print("ALREADY LOGGED IN")
+            print("AL INGELOGD")
         conn.commit()
 
-    return responses.Response(content=f"Successfully login for`{email}`", status_code=status.HTTP_200_OK)
+    return responses.Response(content=f"Succesvolle login for`{email}`", status_code=status.HTTP_200_OK)
 
 
 def check_admin_account_banned(admin_id):
@@ -140,7 +125,7 @@ def admin_id_if_login_valid(ip, optional_admin_login_info=None, use_optional_adm
 def admin_id_by_email(email: str) -> int | None:
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        c.execute(f"SELECT id FROM admins WHERE email='{email}'")
+        c.execute("SELECT id FROM admins WHERE email=?", (email,))
         output = c.fetchone()
 
     if output:
@@ -151,12 +136,12 @@ def admin_id_by_email(email: str) -> int | None:
 def validate_credentials(admin_login_info: AdminLoginField):
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        c.execute(f"SELECT password, banned FROM admins WHERE email='{admin_login_info.email}'")
+        c.execute("SELECT password, banned FROM admins WHERE email=?", (admin_login_info.email,))
         output = c.fetchone()
 
     if output is None:  # wanneer het admin_account niet bestaat:
-        print("admin_account bestaat niet")
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED)
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED,
+                            detail=f"Admin account met email `{admin_login_info.email}` bestaat niet")
 
     correct_password, banned = output
     banned = banned == 1

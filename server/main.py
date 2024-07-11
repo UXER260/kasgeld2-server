@@ -1,3 +1,7 @@
+# TODO voeg tabel toe aan database die per admin account (met admin id als primary key)
+#  een whitelist die bijhoudt welke user accounts gewijzigd mogen worden.
+#  Als admin id (als primary key) niet in tabel voorkomt, dan heeft die admin toegang tot het
+#  wijzigen van elk user account (standaard)a
 import json
 # noinspection PyUnresolvedReferences
 import sqlite3
@@ -8,7 +12,7 @@ import time
 from fastapi import FastAPI, Request, responses, status, HTTPException
 from pydantic import BaseModel
 
-from server import backend
+import backend
 
 
 class AdminLoginField(BaseModel):
@@ -41,29 +45,43 @@ class TransactionField(BaseModel):
     description: str
 
 
+class RawTransactionData(BaseModel):
+    transaction_id: int
+    title: str
+    description: str
+    amount: float
+    saldo_after_transaction: float
+    transaction_timestamp: int
+    user_id: int
+
+
 DEFAULT_CONFIG = """  
 
-    {
-      "host": "0.0.0.0",
-      "port": 8000,
-      "accounts_path": "accounts.db",
-      "month_salary_blacklist": [7, 8],
-      "salary_amount": 5,
 
-      "banned_list_is_whitelist": false,
+{
+  "host": "127.0.0.1",
+  "port": 8000,
+  "database_path": "database.db",
+  "month_salary_blacklist": [7, 8],
+  "salary_amount": 5,
+  "session_expire_time_seconds": 43200,
+  "last_session_wipe_path": "last_session_wipe.json",
+  "banned_list_is_whitelist": false,
 
-      "system_email": {
-        "addr": "uxer260@outlook.com",
-        "pass": "123@Ux3rz6o!",
-        "host": "smtp-mail.outlook.com",
-        "port": 587
-      }
-    }
+  "system_email": {
+    "addr": "uxer260@outlook.com",
+    "pass": "123@Ux3rz6o!",
+    "host": "smtp-mail.outlook.com",
+    "port": 587
+  }
+}
+
 
     """  # fallback
 
 
 def load_config(path="config.json", default_config: str | dict = DEFAULT_CONFIG):
+    print(path)
     try:
         with open(path) as f:
             conf = json.load(f)
