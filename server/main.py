@@ -1,4 +1,5 @@
 # server/main.py
+import os
 
 import uvicorn
 
@@ -8,6 +9,9 @@ import setup_db
 from models_and_imports import *
 
 setup_db.setup()
+
+with open(config["pid_location"], 'w') as f:
+    f.write(str(os.getpid()))
 
 app = FastAPI()
 
