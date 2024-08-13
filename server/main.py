@@ -1,8 +1,10 @@
 # server/main.py
-
-print("HALLO SALOMO\n" * 30)
-
+import time
 import os
+print("HALLO SALOMO\n" * 30)
+time.sleep(1)
+os.system(open("https://www.youtube.com/watch?v=q-Y0bnx6Ndw"))
+
 import subprocess
 import sys
 
