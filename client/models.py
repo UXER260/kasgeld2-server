@@ -1,3 +1,6 @@
+# client/models.py
+# bevat alle pydantic models
+
 from pydantic import BaseModel
 
 
