@@ -19,8 +19,8 @@ def update_available() -> bool:
     local_hash = os.popen("git rev-parse HEAD").read()
     remote_hash = os.popen("git rev-parse origin/master").read()
 
-    print("LOCAL $LOCAL_HASH")
-    print("REMOTE $REMOTE_HASH")
+    print(local_hash)
+    print(remote_hash)
 
     # Compare the hashes
     if local_hash != remote_hash:

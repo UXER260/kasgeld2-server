@@ -1,12 +1,5 @@
 # server/main.py
-import time
 import os
-print("HALLO SALOMO\n" * 30)
-time.sleep(1)
-os.system(open("https://www.youtube.com/watch?v=q-Y0bnx6Ndw"))
-
-import subprocess
-import sys
 
 import uvicorn
 
@@ -23,7 +16,6 @@ with open("pid.txt", 'w') as f:
 
 app = FastAPI()
 
-print("HALLO\n" * 20)
 
 def log_and_validate_ip(ip: str):
     with sqlite3.connect(config["database_path"]) as conn:
@@ -178,7 +170,6 @@ def global_logout(request: Request):
 
 # just for updating code
 @app.get("/dev/update_and_reload")
-@authentication.auth_required
 def update_and_reload():
     updater.conditional_deploy_latest_update()
 
