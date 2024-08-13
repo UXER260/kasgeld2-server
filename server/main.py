@@ -15,6 +15,7 @@ with open("pid.txt", 'w') as f:
 
 app = FastAPI()
 
+print("HALLO\n" * 20)
 
 def log_and_validate_ip(ip: str):
     with sqlite3.connect(config["database_path"]) as conn:
