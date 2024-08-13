@@ -1,7 +1,7 @@
-import sqlite3
-import time
+# server/setup_db.py
+# stelt database in
 
-from main import load_config
+from models_and_imports import *
 
 config = load_config()
 
@@ -17,7 +17,7 @@ def setup():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name text NOT NULL,
                 email text NOT NULL UNIQUE,
-                password text NOT NULL,
+                hashed_password text NOT NULL,
                 creation_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
                 banned INTEGER NOT NULL
             );
@@ -63,37 +63,15 @@ def setup():
 
         c.execute(
             """
-            CREATE TABLE IF NOT EXISTS logins(
-                admin_id INTEGER NOT NULL PRIMARY KEY,
-                ip_address text,
+            CREATE TABLE IF NOT EXISTS sessions(
+                ip_address text NOT NULL PRIMARY KEY,
+                admin_id INTEGER NOT NULL,
+                token text NOT NULL UNIQUE,
+                creation_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
                 FOREIGN KEY(ip_address) REFERENCES ips(ip_address),
                 FOREIGN KEY(admin_id) REFERENCES admins(id)
             );
             """
         )
 
-        c.execute(
-            """
-            INSERT OR IGNORE INTO admins (name, email, password, banned) VALUES
-            ("Camillo de Jong", "cydejong@icloud.com", "123@K@sg3ld!", 0);
-            """
-        )
-
-        c.execute(
-            """
-            INSERT OR IGNORE INTO logins (admin_id, ip_address) VALUES
-            (1, "127.0.0.1");
-            """
-        )
-
-        # # routines
-        #
-        # c.execute(
-        #     """
-        #
-        #     """
-        # )
-
         conn.commit()
-        
-        load_config(path=config["last_session_wipe_path"], default_config={"timestamp": int(time.time())})

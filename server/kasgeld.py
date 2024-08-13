@@ -1,6 +1,9 @@
-import datetime
+# server/kasgeld.py
+# Bevat alle functies om kasgeld en leerling data aan te passen
 
-from main import *
+import datetime
+import time
+from models_and_imports import *
 
 month_map = {
     1: "januari",
@@ -44,7 +47,7 @@ def username_if_exists(user_id: int):  # geeft user_id alleen wanneer user besta
     return None  # gebruiker bestaat niet
 
 
-def check_manage_monthly_saldo_updates(user_id: int):
+def manage_monthly_saldo_updates(user_id: int):
     if not username_if_exists(user_id):
         raise HTTPException(status.HTTP_404_NOT_FOUND, f"Gebruiker bestaat niet")  # gebruiker bestaat niet
 
@@ -59,16 +62,16 @@ def check_manage_monthly_saldo_updates(user_id: int):
     if not months_to_account_for > 0:  # als je geen recht hebt op kasgeld:
         return True
     for month in range(months_to_account_for):
-        transaction_month = (last_update_month + month) % 12 + 1
+        transaction_month = (last_update_month + month) % 12 + 1  # berekent maand nummer
 
-        # je krijgt standaard 10 × kasgeld (in plaats van 12)
+        # standaard krijgt ieder 10× kasgeld (in plaats van 12)
         if transaction_month in config[
             "month_salary_blacklist"
         ]:
             continue
 
-        month_name = month_map[transaction_month]
-        transaction_year = int(last_update_year + month / 12)
+        month_name = month_map[transaction_month]  # verkrijgt maand naam
+        transaction_year = int(last_update_year + month / 12)  # Berekend jaar waarin kasgeld maan was/is
 
         saldo_after_transaction = userdata.saldo + config["salary_amount"]
         print("SALARY:", config["salary_amount"])
@@ -112,7 +115,7 @@ def get_raw_userdata(user_id: int = None, username: str = None, update_monthly_k
             raise HTTPException(status.HTTP_404_NOT_FOUND, f"Gebruiker met id `{user_id}` bestaat niet")
 
     if update_monthly_kasgeld:
-        check_manage_monthly_saldo_updates(user_id=user_id)
+        manage_monthly_saldo_updates(user_id=user_id)
 
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
@@ -227,7 +230,8 @@ def rename_user(user_id: int, new_username: str):
         c = conn.cursor()
         c.execute("UPDATE users SET name = ? WHERE id = ?", (new_username, user_id))
         conn.commit()
-    return responses.Response(f"Gebruiker `{username}` is succesvol hernoemd naar `{new_username}`", status_code=status.HTTP_200_OK)
+    return responses.Response(f"Gebruiker `{username}` is succesvol hernoemd naar `{new_username}`",
+                              status_code=status.HTTP_200_OK)
 
 
 def get_username_list():
@@ -242,7 +246,8 @@ def get_transaction_list(user_id):
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
         c.execute(
-            "SELECT id, title, description, amount, saldo_after_transaction, transaction_timestamp, user_id FROM transactions WHERE user_id = ?",
+            """SELECT id, title, description, amount, saldo_after_transaction, transaction_timestamp, user_id
+            FROM transactions WHERE user_id = ?""",
             (user_id,))
         output = c.fetchall()
 

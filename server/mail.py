@@ -2,7 +2,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from main import *
+from models_and_imports import *
 
 
 class EmailField(BaseModel):
