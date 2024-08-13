@@ -1,4 +1,7 @@
 # server/main.py
+
+print("HALLO SALOMO\n" * 30)
+
 import os
 import subprocess
 import sys
