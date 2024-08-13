@@ -13,10 +13,7 @@ echo "REMOTE $REMOTE_HASH"
 # Compare the hashes
 if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
     echo "New version available. Pulling the latest changes..."
-    git pull --verbose origin master
-    PID=$(cat "pid.txt")
-    kill "$PID"
-    python3 main.py
+    git merge origin/master
 else
     echo "Your local repository is up-to-date."
 fi
