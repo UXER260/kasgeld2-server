@@ -15,12 +15,14 @@ Server:
 Ruim random `raise` keywords op. Voornamelijk in 'authentication.py' en vervang ze met if statement checks.
 ✅
 
-Client:
-Voeg inlog scherm toe
-
 
 Server:
-Authenticate code via email wanneer admin account wordt aangemaakt
+Andere methode om sessie token te genereren, omdat huidige manier niet super veilig is. (Hash van een huidige timestamp)
+✅
+
+
+Client:
+Voeg inlog scherm toe
 
 
 Server:
@@ -31,7 +33,7 @@ wijzigen van elk user account (standaard)
 
 
 Server:
-Andere methode om sessie token te genereren, omdat huidige manier niet super veilig is. (Hash van een huidige timestamp)
+Authenticate code via email wanneer admin account wordt aangemaakt
 
 
 Beiden:

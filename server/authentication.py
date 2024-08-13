@@ -4,6 +4,7 @@
 import hashlib
 import time
 from functools import wraps
+from cryptography import fernet
 
 from models_and_imports import *
 
@@ -212,7 +213,7 @@ def admin_id_by_email(email: str) -> int | None:  # Verkrijgt admin id met bijbe
 
 
 def generate_session_token():  # Genereert sessie token
-    return create_hash(str(time.time()))
+    return fernet.Fernet.generate_key()
 
 
 def validate_normal_credentials(admin_login_info: AdminLoginField):  # Checkt of email en wachtwoord geldig zijn
