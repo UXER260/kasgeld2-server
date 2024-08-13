@@ -7,8 +7,6 @@
   "session_expire_time_seconds": 43200,
   "banned_list_is_whitelist": false,
 
-  "pid_location": "last_pid.txt",
-
   "system_email": {
     "addr": "uxer260@outlook.com",
     "pass": "123@Ux3rz6o!",

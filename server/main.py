@@ -10,7 +10,7 @@ from models_and_imports import *
 
 setup_db.setup()
 
-with open(config["pid_location"], 'w') as f:
+with open("pid.txt", 'w') as f:
     f.write(str(os.getpid()))
 
 app = FastAPI()
@@ -168,6 +168,13 @@ def global_logout(request: Request):
     return authentication.logout_id(admin_id=admin_id)
 
 
+# just for updating code
+@app.get("/dev/update_from_github")
+def update_code_from_github_then_restart():
+    ...
+
+
 if __name__ == "__main__":
     setup_db.setup()
-    uvicorn.run("main:app", reload=True, host=config["host"], port=config["port"], log_level="info")
+    uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
+    # uvicorn.run("main:app", reload=True, host=config["host"], port=config["port"], log_level="info")
