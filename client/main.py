@@ -27,14 +27,13 @@ class App(Camillo_GUI_framework.App):
                     cls.active = False
                     return False
 
-        # pysg.popup_no_buttons("Updates checken...", non_blocking=True, auto_close=True, auto_close_duration=1,
-        #                       keep_on_top=True,
-        #                       no_titlebar=True, font=backend.default_font())
+        pysg.popup_no_buttons("Updates checken...", non_blocking=True, auto_close=True, auto_close_duration=1,
+                               no_titlebar=True, font=backend.default_font())
         updated = updater.conditional_deploy_latest_update()
         if updated:
             print("UPDATED!")
             pysg.popup_no_buttons("Nieuwe updates gedownload.\nHerstarten...", non_blocking=True, auto_close=True,
-                                  auto_close_duration=.5, keep_on_top=True)
+                                  auto_close_duration=.5)
 
         super().run()
 
