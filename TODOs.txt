@@ -23,6 +23,15 @@ Andere methode om sessie token te genereren, omdat huidige manier niet super vei
 
 Client:
 Voeg inlog scherm toe
+✅
+
+
+Client:
+Voeg admin account overview toe
+
+
+Client & Server:
+Voeg bij saldo-verander menu datum kiezer toe. Die datum word dat bij de server opgeslagen in de database bij 'purchase date' (geeft aan wanneer aankoop was gemaakt) of iets dergelijks. De `transaction timestamp` (geeft aan wanneer transactie daadwerkelijk os toegevoegd) blijft behouden.
 
 
 Server:

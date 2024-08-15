@@ -1,6 +1,6 @@
 {
-  "mode_gui_path": "bank_GUI.py",
   "request_url": "http://localhost:8000/",
+  "cookiejar_location": "cookiejar.json",
   "window_size": [1000, 600],
   "window_edge_margin": [15, 15],
   "theme": "SystemDefaultForReal",
