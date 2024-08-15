@@ -34,6 +34,7 @@ class App(Camillo_GUI_framework.App):
 
         super().run()
 
+pysg.popup("test!")
 
 class UserSelectionWindow(Camillo_GUI_framework.Gui):
     def __init__(self, name_list: list[str] = None,
