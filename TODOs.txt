@@ -27,7 +27,14 @@ Voeg inlog scherm toe
 
 
 Client:
+Check voor updates vlak na starten van applicatie (na dat sessie is geverifieerd)
+
+
+Client:
 Voeg admin account overview toe
+
+Client:
+uitlog knop
 
 
 Client & Server:

@@ -32,9 +32,10 @@ def update_available() -> bool:
 
 
 def unconditional_pull_latest_repo():  # update no matter what
-    update_available()
+    updated = update_available()
     print("Pulling the latest changes...")
     os.system("git merge origin/master")
+    return updated
 
 
 def conditional_pull_latest_repo():  # update if available
@@ -51,5 +52,6 @@ def unconditional_deploy_latest_update():
 
 
 def conditional_deploy_latest_update():
-    if conditional_pull_latest_repo() is True:
+    if (updated := conditional_pull_latest_repo()) is True:
         restart_program()
+    return updated
