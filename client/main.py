@@ -27,9 +27,9 @@ class App(Camillo_GUI_framework.App):
                     cls.active = False
                     return False
 
-        pysg.popup_no_buttons("Updates checken...", non_blocking=True, auto_close=True, auto_close_duration=1,
-                              keep_on_top=True,
-                              no_titlebar=True, font=backend.default_font())
+        # pysg.popup_no_buttons("Updates checken...", non_blocking=True, auto_close=True, auto_close_duration=1,
+        #                       keep_on_top=True,
+        #                       no_titlebar=True, font=backend.default_font())
         updated = updater.conditional_deploy_latest_update()
         if updated:
             print("UPDATED!")
@@ -37,8 +37,6 @@ class App(Camillo_GUI_framework.App):
                                   auto_close_duration=.5, keep_on_top=True)
 
         super().run()
-
-pysg.popup("HET WERKTE")
 
 class UserSelectionWindow(Camillo_GUI_framework.Gui):
     def __init__(self, name_list: list[str] = None,
