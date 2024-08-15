@@ -1,5 +1,7 @@
 # client/Camillo_GUI_framework
 # Zelf gemaakt framework voor user interface
+import requests
+
 import backend
 from imports import *
 
@@ -93,6 +95,10 @@ class Gui:
                                      **self.overwritten_window_args)
 
         self.window = new_window
+        # self.event, self.values = self.window.read()
+
+    def refresh(self):  # kan worden gebruikt om elementen in window te refreshen
+        pass
 
     def update(self):
         self.event, self.values = self.window.read()
@@ -173,4 +179,10 @@ class App:
         assert cls.current_gui is not None, "Makesure `current_gui` is properly set before running."
         cls.active = True
         while cls.active:
-            cls.update()
+            try:
+                cls.update()
+            except requests.ConnectionError:
+                pysg.Popup("De verbinding is niet (meer) beschikbaar.\n"
+                           "Zorg ervoor dat je verbonden bent met het WiFi netwerk 'De Vrije Ruimte'\n",
+                           "Check je connectie en probeer het opnieuw.",
+                           title="Connectie Fout", keep_on_top=True, font=backend.default_font())

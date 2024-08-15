@@ -11,9 +11,6 @@ from models_and_imports import *
 
 setup_db.setup()
 
-with open("pid.txt", 'w') as f:
-    f.write(str(os.getpid()))
-
 app = FastAPI()
 
 

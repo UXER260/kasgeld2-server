@@ -1,7 +1,8 @@
 # server/authentication.py
 # De functie van deze module is het authenticeren van admins.
-
+import base64
 import hashlib
+import os
 import time
 from functools import wraps
 from cryptography import fernet
@@ -159,7 +160,7 @@ def create_session(request: Request, admin_login_info: AdminLoginField):  # Logi
             conn.commit()
             print("Al ingelogd. Session token hernieuwd")
 
-    response = Response(content=f"Succesvolle login for`{admin_login_info.email}`", status_code=status.HTTP_200_OK)
+    response = Response(content=f"Succesvolle login for `{admin_login_info.email}`", status_code=status.HTTP_200_OK)
     response.set_cookie(key="session_token", value=new_session_token)
     return response
 
@@ -213,7 +214,7 @@ def admin_id_by_email(email: str) -> int | None:  # Verkrijgt admin id met bijbe
 
 
 def generate_session_token():  # Genereert sessie token
-    return fernet.Fernet.generate_key()
+    return create_hash(str(base64.urlsafe_b64encode(os.urandom(32))))
 
 
 def validate_normal_credentials(admin_login_info: AdminLoginField):  # Checkt of email en wachtwoord geldig zijn
