@@ -10,7 +10,6 @@ from imports import *
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-print("TEST")
 class App(Camillo_GUI_framework.App):
     @classmethod
     def run(cls):
