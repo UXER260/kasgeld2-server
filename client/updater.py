@@ -5,6 +5,8 @@
 import os
 import sys
 
+import PySimpleGUI
+
 
 def restart_program():
     python = sys.executable
@@ -32,16 +34,22 @@ def update_available() -> bool:
 
 
 def unconditional_pull_latest_repo():  # update no matter what
-    updated = update_available()
-    print("Pulling the latest changes...")
-    os.system("git merge origin/master")
-    return updated
+    update_is_available = update_available()
+    if update_is_available:
+        PySimpleGUI.popup_no_buttons("Nieuwe updates downloaden.\nEven geduld.", non_blocking=True, auto_close=True,
+                                     auto_close_duration=.75)
+        print("Pulling the latest changes...")
+    output = os.popen("git merge origin/master").read()
+    if "Please commit your changes or stash them before you merge." in output:
+        print("Error")
+        return False
+    print(output)
+    return update_is_available
 
 
 def conditional_pull_latest_repo():  # update if available
     if update_available():
-        unconditional_pull_latest_repo()
-        return True
+        return unconditional_pull_latest_repo()
     else:
         print("Nothing to update.")
 

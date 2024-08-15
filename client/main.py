@@ -14,6 +14,14 @@ with open('config.json', 'r') as f:
 class App(Camillo_GUI_framework.App):
     @classmethod
     def run(cls):
+        # pysg.popup_no_buttons("Updates checken...", non_blocking=True, auto_close=True, auto_close_duration=.2,
+        #                       no_titlebar=True, font=backend.default_font())
+        updated = updater.conditional_deploy_latest_update()
+        if updated:
+            print("UPDATED!")
+            pysg.popup_no_buttons("Nieuwe updates gedownload.\nHerstarten...", non_blocking=True, auto_close=True,
+                                  auto_close_duration=.75)
+
         valid_session = backend.Admin.check_session_valid()
         if not valid_session:
             cls.current_gui().window.hide()
@@ -22,23 +30,9 @@ class App(Camillo_GUI_framework.App):
                 cls.active = False
                 return False
             else:
-                succes = cls.set_gui(gui=AdminLoginMenu())
-                if succes is not True:
-                    cls.active = False
-                    return False
-
-        pysg.popup_no_buttons("Updates checken...", non_blocking=True, auto_close=True, auto_close_duration=1,
-                               no_titlebar=True, font=backend.default_font())
-        updated = updater.conditional_deploy_latest_update()
-        if updated:
-            print("UPDATED!")
-            pysg.popup_no_buttons("Nieuwe updates gedownload.\nHerstarten...", non_blocking=True, auto_close=True,
-                                  auto_close_duration=.5)
+                cls.set_gui(gui=AdminLoginMenu())
 
         super().run()
-
-
-pysg.popup("HET WERKTE!!!")
 
 
 class UserSelectionWindow(Camillo_GUI_framework.Gui):
