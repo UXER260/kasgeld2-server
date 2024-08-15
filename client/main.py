@@ -37,6 +37,10 @@ class App(Camillo_GUI_framework.App):
 
         super().run()
 
+
+pysg.popup("HET WERKTE!!!")
+
+
 class UserSelectionWindow(Camillo_GUI_framework.Gui):
     def __init__(self, name_list: list[str] = None,
                  window_title="Kies een persoon", *args, **kwargs):
