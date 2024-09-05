@@ -13,10 +13,11 @@ def restart_program():
     os.execv(python, [python] + sys.argv)
 
 
-def update_available() -> bool:
-    # Fetch the latest changes from the remote repository
-    os.system("git fetch --verbose origin")
+def fetch_update():  # Fetch the latest changes from the remote repository
+    print(os.popen("git fetch --verbose origin").read(), "aaa")
 
+
+def update_available() -> bool:
     # Get the latest commit hash on the local and remote branches
     local_hash = os.popen("git rev-parse HEAD").read()
     remote_hash = os.popen("git rev-parse origin/master").read()
@@ -24,7 +25,6 @@ def update_available() -> bool:
     print(local_hash)
     print(remote_hash)
 
-    # Compare the hashes
     if local_hash != remote_hash:
         print("New version available.")
         return True
@@ -33,33 +33,26 @@ def update_available() -> bool:
         return False
 
 
-def unconditional_pull_latest_repo():  # update no matter what
-    update_is_available = update_available()
-    # if update_is_available:
-    #     PySimpleGUI.popup_no_buttons("Nieuwe updates downloaden.\nEven geduld.", non_blocking=True, auto_close=True,
-    #                                  auto_close_duration=.75)
-    #     print("Pulling the latest changes...")
-    os.system("git merge origin/master")
-    # if "Please commit your changes or stash them before you merge." in output:
-    #     print("Erro sdkjfhsdm fgr")
-    #     return False
-    # print(output)
-    return update_is_available
-
-
-def conditional_pull_latest_repo():  # update if available
+def pull_latest_repo():  # update if available
+    fetch_update()
     if update_available():
-        return unconditional_pull_latest_repo()
+        print("Merging latest changes...")
+
+        # zorg ervoor dat is ge-fetched voor git reset/merge/rebase
+
+        # todo gebruik voor dev
+        print(os.popen("git merge origin/master").read(), "bbb")
+
+        # todo gebruik vóór installeren op raspberry schoolserver!!!!!!!!
+        # print(os.popen("git reset --hard origin/master").read())
+        return True
     else:
         print("Nothing to update.")
+        return False
 
 
-def unconditional_deploy_latest_update():
-    unconditional_pull_latest_repo()
-    restart_program()
-
-
-def conditional_deploy_latest_update():
-    if (updated := conditional_pull_latest_repo()) is True:
+def deploy_latest_update():
+    if pull_latest_repo() is True:
+        PySimpleGUI.popup_no_buttons("Nieuwe updates gedownload.\nHerstarten...", non_blocking=True, auto_close=True,
+                                     auto_close_duration=.75)
         restart_program()
-    return updated
