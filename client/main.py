@@ -157,7 +157,7 @@ class UserOverviewWindow(Camillo_GUI_framework.Gui):
 
         self.update_window_title(new_title=f"Gebruikersoverzicht - {self.user.data.name}")
 
-        self.window["-SALDO-"].update(self.user.data.saldo)
+        self.window["-SALDO-"].update(f"€{self.user.data.saldo}")
 
         if update_transaction_list:
             self.transaction_list = backend.User.get_transaction_list(user_id=self.user.data.user_id)
