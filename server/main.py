@@ -168,7 +168,7 @@ def global_logout(request: Request):
 # just for updating code
 @app.get("/dev/update_and_reload")
 def update_and_reload():
-    updater.conditional_deploy_latest_update()
+    updater.deploy_latest_update()
 
 
 if __name__ == "__main__":

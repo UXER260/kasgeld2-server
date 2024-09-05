@@ -11,10 +11,11 @@ def restart_program():
     os.execv(python, [python] + sys.argv)
 
 
-def update_available() -> bool:
-    # Fetch the latest changes from the remote repository
-    os.system("git fetch --verbose origin")
+def fetch_update():  # Fetch the latest changes from the remote repository
+    print(os.popen("git fetch --verbose origin").read(), "aaa")
 
+
+def update_available() -> bool:
     # Get the latest commit hash on the local and remote branches
     local_hash = os.popen("git rev-parse HEAD").read()
     remote_hash = os.popen("git rev-parse origin/master").read()
@@ -22,7 +23,6 @@ def update_available() -> bool:
     print(local_hash)
     print(remote_hash)
 
-    # Compare the hashes
     if local_hash != remote_hash:
         print("New version available.")
         return True
@@ -31,25 +31,17 @@ def update_available() -> bool:
         return False
 
 
-def unconditional_pull_latest_repo():  # update no matter what
-    update_available()
-    print("Pulling the latest changes...")
-    os.system("git merge origin/master")
-
-
-def conditional_pull_latest_repo():  # update if available
+def pull_latest_repo():  # update if available
+    fetch_update()
     if update_available():
-        unconditional_pull_latest_repo()
+        print("Merging latest changes...")
+        print(os.popen("git merge origin/master").read(), "bbb")
         return True
     else:
         print("Nothing to update.")
+        return False
 
 
-def unconditional_deploy_latest_update():
-    unconditional_pull_latest_repo()
-    restart_program()
-
-
-def conditional_deploy_latest_update():
-    if conditional_pull_latest_repo() is True:
+def deploy_latest_update():
+    if pull_latest_repo() is True:
         restart_program()
