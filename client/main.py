@@ -10,7 +10,7 @@ from imports import *
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-print("TEST")
+pysg.popup_no_buttons("TESTTT!!!", font=backend.default_font())
 
 
 class App(Camillo_GUI_framework.App):
