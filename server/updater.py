@@ -51,4 +51,5 @@ def pull_latest_repo():  # update if available
 
 def deploy_latest_update():
     if pull_latest_repo() is True:
+        print("Update downloaded. Restarting program...")
         restart_program()

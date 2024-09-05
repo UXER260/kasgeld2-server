@@ -53,6 +53,7 @@ def pull_latest_repo():  # update if available
 
 def deploy_latest_update():
     if pull_latest_repo() is True:
+        print("Update downloaded. Restarting program...")
         PySimpleGUI.popup_no_buttons("Nieuwe updates gedownload.\nHerstarten...", non_blocking=True, auto_close=True,
                                      auto_close_duration=.75)
         restart_program()

@@ -16,6 +16,9 @@ print("TEST")
 class App(Camillo_GUI_framework.App):
     @classmethod
     def run(cls):
+        print("voor nieuwe updates checken...")
+        # pysg.popup_no_buttons("Nieuwe updates gedownload.\nHerstarten...", non_blocking=True, auto_close=True,
+        #                       auto_close_duration=.75)
         updater.deploy_latest_update()
         # als nieuwe update beschikbaar en gedownload was,
         # dan zal dit programma nu herstarten en alle code hieronder niet meer worden ge-execute
