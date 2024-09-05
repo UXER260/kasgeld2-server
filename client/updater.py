@@ -35,15 +35,15 @@ def update_available() -> bool:
 
 def unconditional_pull_latest_repo():  # update no matter what
     update_is_available = update_available()
-    if update_is_available:
-        PySimpleGUI.popup_no_buttons("Nieuwe updates downloaden.\nEven geduld.", non_blocking=True, auto_close=True,
-                                     auto_close_duration=.75)
-        print("Pulling the latest changes...")
-    output = os.popen("git merge origin/master").read()
-    if "Please commit your changes or stash them before you merge." in output:
-        print("Error")
-        return False
-    print(output)
+    # if update_is_available:
+    #     PySimpleGUI.popup_no_buttons("Nieuwe updates downloaden.\nEven geduld.", non_blocking=True, auto_close=True,
+    #                                  auto_close_duration=.75)
+    #     print("Pulling the latest changes...")
+    os.system("git merge origin/master")
+    # if "Please commit your changes or stash them before you merge." in output:
+    #     print("Erro sdkjfhsdm fgr")
+    #     return False
+    # print(output)
     return update_is_available
 
 

@@ -10,11 +10,12 @@ from imports import *
 with open('config.json', 'r') as f:
     config = json.load(f)
 
+print("TEST")
+
+
 class App(Camillo_GUI_framework.App):
     @classmethod
     def run(cls):
-        # pysg.popup_no_buttons("Updates checken...", non_blocking=True, auto_close=True, auto_close_duration=.2,
-        #                       no_titlebar=True, font=backend.default_font())
         updated = updater.conditional_deploy_latest_update()
         if updated:
             print("UPDATED!")
@@ -32,6 +33,7 @@ class App(Camillo_GUI_framework.App):
                 cls.set_gui(gui=AdminLoginMenu())
 
         super().run()
+
 
 class UserSelectionWindow(Camillo_GUI_framework.Gui):
     def __init__(self, name_list: list[str] = None,
