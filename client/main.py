@@ -10,14 +10,10 @@ from imports import *
 with open('config.json', 'r') as f:
     config = json.load(f)
 
-pysg.popup_no_buttons("TESTTT!!!", font=backend.default_font())
-
 
 class App(Camillo_GUI_framework.App):
     @classmethod
     def run(cls):
-        pysg.popup_no_buttons("Voor nieuwe updates checken...", non_blocking=True, auto_close=True,
-                              auto_close_duration=.75, font=backend.default_font())
         updater.deploy_latest_update()
         # als nieuwe update beschikbaar en gedownload was,
         # dan zal dit programma nu herstarten en alle code hieronder niet meer worden ge-execute
