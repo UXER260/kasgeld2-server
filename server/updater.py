@@ -35,7 +35,8 @@ def pull_latest_repo():  # update if available
     fetch_update()
     if update_available():
         print("Merging latest changes...")
-        print(os.popen("git merge origin/master").read(), "bbb")
+        # zorg ervoor dat is ge-fetched voor git reset/merge/rebase
+        print(os.popen("git reset --hard origin/master").read())
         return True
     else:
         print("Nothing to update.")
