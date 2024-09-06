@@ -30,13 +30,14 @@ def exception(exc_type, exc_value, exc_traceback):
     print(f"{exc_type.__name__}: {exc_value}")
 
     if exc_type is requests.exceptions.ConnectionError:
-        pysg.Popup("Verbinden niet mogelijk.\n"
-                   "Zorg ervoor dat je verbonden bent met het WiFi netwerk 'De Vrije Ruimte'\n",
-                   "Check je connectie en probeer het opnieuw.",
+        pysg.Popup("Verbinding niet mogelijk.\n"
+                   "Zorg ervoor dat je verbonden bent met het WiFi netwerk 'De Vrije Ruimte'\n"
+                   "Check je connectie en probeer het opnieuw.\n"
+                   "Neem AUB contact op met Camillo als dit propleem vaker voorkomt.",
                    title="Connectie Fout", keep_on_top=True, font=config["font"])
     else:
         pysg.Popup(
-            f'⚠Er is een onverwachtse fout opgetreden, neem AUB contact op met Camillo, als het propleem vaker voorkomt.'
+            f'⚠Er is een onverwachtse fout opgetreden. Neem AUB contact op met Camillo als dit propleem vaker voorkomt.'
             f'\n\nType: "{exc_type.__name__}"\nOmschrijving: "{exc_value}"',
             title="ONBEKENDE FOUT", text_color='red', keep_on_top=True, font=config["font"]
         )
