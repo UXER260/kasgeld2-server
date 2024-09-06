@@ -41,7 +41,7 @@ def pull_latest_repo():  # update if available
         # zorg ervoor dat is ge-fetched voor git reset/merge/rebase
 
         # todo gebruik voor dev
-        # print(os.popen("git merge origin/master").read(), "bbb")
+        # print(os.popen("git merge origin/master").read())
 
         # todo gebruik vóór installeren op raspberry schoolserver!!!!!!!!
         print(os.popen("git reset --hard origin/master").read())
