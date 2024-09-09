@@ -76,7 +76,6 @@ def get_userdata_by_username(request: Request, username: str):
 
 
 @app.post("/add_user")
-@authentication.auth_required
 def add_user(request: Request, userdata: AddUser, transaction_made_timestamp: float = None):
     return kasgeld.add_user(userdata=userdata, transaction_made_timestamp=transaction_made_timestamp)
 
