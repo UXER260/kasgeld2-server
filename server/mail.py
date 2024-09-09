@@ -4,6 +4,8 @@ from email.mime.text import MIMEText
 
 from models_and_imports import *
 
+system_email_info = load_config("system_email.json")
+
 
 class EmailField(BaseModel):
     receiver: str
@@ -26,8 +28,8 @@ def send(mail: EmailField):
     if text_body and html_body:  # Mag alleen 1 van de twee in vullen. Niet beide.
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "You must either provide text or html content. Not both.")
 
-    host, port, syst_addr, password = config["system_email"]["host"], config["system_email"]["port"], \
-        config["system_email"]["addr"], config["system_email"]["pass"]
+    host, port, syst_addr, password = system_email_info["host"], system_email_info["port"], \
+        system_email_info["addr"], system_email_info["pass"]
 
     msg = MIMEMultipart('alternative')
     msg["Subject"] = title
