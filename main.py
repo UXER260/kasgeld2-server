@@ -8,7 +8,7 @@ import kasgeld
 import setup_db
 import updater
 from models_and_imports import *
-
+print("TESTSTTSTSTSTTSTTT!!!!!!!")
 setup_db.setup()
 
 app = FastAPI()
