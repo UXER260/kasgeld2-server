@@ -1,4 +1,7 @@
 # server/main.py
+
+print("TESTTTTT!!!!!!")
+
 import os
 
 import uvicorn
