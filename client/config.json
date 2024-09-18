@@ -1,9 +1,0 @@
-{
-  "request_url": "http://schoolserver.local:8000/",
-  "cookiejar_location": "cookiejar.json",
-  "window_size": [1000, 600],
-  "window_edge_margin": [15, 15],
-  "theme": "SystemDefaultForReal",
-  "font": ["Helvetica", 35],
-  "item_separation": ["-", 80]
-}
