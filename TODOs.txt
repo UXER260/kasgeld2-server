@@ -1,56 +1,32 @@
-Server:
 Compleet nieuw inlogsysteem zonder het gebruik van ips voor login sessies,
 maar met wachtwoord hashes om in te loggen om een login token te verkrijgen in de vorm van een cookie
 ✅
 
-Server:
 Authenticatie toevoegen aan alle gebruikersgerelateerde endpoints
 ✅
 
-Server:
 Gebruikers kunnen verandering van bijv saldo aanvragen met transactie verzoek
 
 
-Server:
 Ruim random `raise` keywords op. Voornamelijk in 'authentication.py' en vervang ze met if statement checks.
 ✅
 
 
-Server:
 Andere methode om sessie token te genereren, omdat huidige manier niet super veilig is. (Hash van een huidige timestamp)
 ✅
 
-
-Client:
-Voeg inlog scherm toe
-✅
-
-
-Client:
-Check voor updates vlak na starten van applicatie (na dat sessie is geverifieerd)
-
-
-Client:
-Voeg admin account overview toe
-
-Client:
-uitlog knop
-
-
 Client & Server:
-Voeg bij saldo-verander menu datum kiezer toe. Die datum word dat bij de server opgeslagen in de database bij 'purchase date' (geeft aan wanneer aankoop was gemaakt) of iets dergelijks. De `transaction timestamp` (geeft aan wanneer transactie daadwerkelijk os toegevoegd) blijft behouden.
+Voeg bij saldo-verander menu datum kiezer toe. Die datum wordt dan bij de server als timestamp opgeslagen in de database bij 'purchase date' of iets dergelijks. Het geeft aan wanneer de aankoop was gemaakt. De bestaande `transaction timestamp` blijft behouden. (geeft aan wanneer transactie daadwerkelijk is toegevoegd).
 
 
-Server:
 Voeg tabel toe aan database die per admin account (met admin id als primary key)
 een whitelist die bijhoudt welke user accounts gewijzigd mogen worden.
 Als admin id (als primary key) niet in tabel voorkomt, dan heeft die admin toegang tot het
 wijzigen van elk user account (standaard)
 
 
-Server:
 Authenticate code via email wanneer admin account wordt aangemaakt
 
 
-Beiden:
+Client & Server:
 Maak installer om bijv dependencies te installeren
