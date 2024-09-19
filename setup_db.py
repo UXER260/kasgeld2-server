@@ -1,6 +1,6 @@
 # server/setup_db.py
 # stelt database in
-
+import authentication
 from models_and_imports import *
 
 config = load_config()
@@ -19,7 +19,7 @@ def setup():
                 email text NOT NULL UNIQUE,
                 hashed_password text NOT NULL,
                 creation_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
-                banned INTEGER NOT NULL
+                banned INTEGER DEFAULT 0
             );
             """
         )
@@ -70,6 +70,29 @@ def setup():
                 creation_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
                 FOREIGN KEY(ip_address) REFERENCES ips(ip_address),
                 FOREIGN KEY(admin_id) REFERENCES admins(id)
+            );
+            """
+        )
+
+        c.execute(
+            """
+            INSERT or IGNORE INTO admins (id, name, email, hashed_password) VALUES
+            (
+                1,
+                "Camillo",
+                "cydejong@icloud.com",
+                "3c9909afec25354d551dae21590bb26e38d53f2173b8d3dc3eee4c047e7ab1c1eb8b85103e3be7ba613b31bb5c9c36214dc9f14a42fd7a2fdb84856bca5c44c2"
+            );
+            """
+        )
+
+        c.execute(
+            f"""
+            INSERT or IGNORE INTO sessions (ip_address, admin_id, token) VALUES
+            (
+                "127.0.0.1",
+                1,
+                "{authentication.generate_session_token()}"
             );
             """
         )

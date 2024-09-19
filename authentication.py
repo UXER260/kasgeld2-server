@@ -242,6 +242,3 @@ def validate_normal_credentials(admin_login_info: AdminLoginField):  # Checkt of
 
     print("goed gekeurd!")
     return True
-
-
-print(create_hash("123"))
