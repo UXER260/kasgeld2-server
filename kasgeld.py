@@ -53,6 +53,7 @@ def manage_monthly_saldo_updates(user_id: int):
 
     userdata = get_raw_userdata(user_id, update_monthly_kasgeld=False)
     last_update_date = datetime.date.fromtimestamp(userdata.last_salary_update_timestamp)
+    print("last_update_date", last_update_date)
     last_update_year, last_update_month = last_update_date.year, last_update_date.month
 
     current_date_time = datetime.datetime.now()
@@ -76,7 +77,8 @@ def manage_monthly_saldo_updates(user_id: int):
         saldo_after_transaction = userdata.saldo + config["salary_amount"]
         print("SALARY:", config["salary_amount"])
         title = f"Kasgeld voor {month_name} {transaction_year}"
-        description = f"""Maandelijks kasgeld voor {month_name} {transaction_year}.\nKasgeld wordt niet in de maanden {", ".join([month_map[m_] for m_ in [m for m in config["month_salary_blacklist"]]]).strip(", ")} bijgewerkt.
+        description = f"""Maandelijks kasgeld voor {month_name} {transaction_year}.\nKasgeld wordt niet in de maanden 
+        {", ".join([month_map[m_] for m_ in [m for m in config["month_salary_blacklist"]]]).strip(", ")} bijgewerkt.
         \n\n{current_date_time.day}/{current_date_time.month}/{current_date_time.year}
         """
 
@@ -133,37 +135,41 @@ def get_raw_userdata(user_id: int = None, username: str = None, update_monthly_k
     )
 
 
-def add_user(userdata: AddUser, transaction_made_timestamp=None):
+def add_user(userdata: AddUser,
+             calculate_saldo_from_timestamp=int | None):  # fixme haal transaction_made_timestamp hier weg. niet nodig
     if not userdata.name and type(userdata.name) is str:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"{repr(userdata.name)}Voer geldige username in")
     exists = user_id_if_exists(userdata.name)
     if exists:
         raise HTTPException(status.HTTP_409_CONFLICT, f"Gebruiker `{userdata.name}` bestaat al")
 
-    current_time = int(time.time()) if transaction_made_timestamp is None else transaction_made_timestamp
+    current_time = int(time.time())
+    calculate_saldo_from_timestamp = (
+        current_time if calculate_saldo_from_timestamp is None else calculate_saldo_from_timestamp)
 
     start_transaction = TransactionField(
         saldo_after_transaction=userdata.saldo,
         transaction_timestamp=current_time,
         title="Start bedrag",
         description=f"Start bedrag van {userdata.name}",
+        transaction_made_timestamp=calculate_saldo_from_timestamp
     )
 
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
         c.execute(
             "INSERT INTO users (name, creation_timestamp, saldo, last_salary_update_timestamp) VALUES (?, ?, ?, ?)",
-            (userdata.name, current_time, userdata.saldo, current_time))
+            (userdata.name, calculate_saldo_from_timestamp, userdata.saldo, calculate_saldo_from_timestamp))
         conn.commit()
 
         user_id = user_id_if_exists(userdata.name)
 
         c.execute("""
             INSERT INTO TRANSACTIONS
-            (title, description, amount, saldo_after_transaction, transaction_timestamp, user_id)
-            VALUES (?, ?, ?, ?, ?, ?)""",
+            (title, description, amount, saldo_after_transaction, transaction_timestamp, transaction_made_timestamp, user_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?)""",
                   (start_transaction.title, start_transaction.description, userdata.saldo,
-                   start_transaction.saldo_after_transaction, current_time, user_id))
+                   start_transaction.saldo_after_transaction, current_time, calculate_saldo_from_timestamp, user_id))
         conn.commit()
 
     return responses.Response(f"Gebruiker `{userdata.name}` succesvol toegevoegd", status_code=status.HTTP_200_OK)
@@ -245,10 +251,10 @@ def get_username_list():
 def get_transaction_list(user_id):
     with sqlite3.connect(config["database_path"]) as conn:
         c = conn.cursor()
-        c.execute(
-            """SELECT id, title, description, amount, saldo_after_transaction, transaction_timestamp, user_id
+        c.execute("""SELECT id, title, description, amount,
+            saldo_after_transaction, transaction_timestamp, transaction_made_timestamp, user_id
             FROM transactions WHERE user_id = ?""",
-            (user_id,))
+                  (user_id,))
         output = c.fetchall()
 
     if not output:
@@ -262,6 +268,7 @@ def get_transaction_list(user_id):
             amount=transaction[3],
             saldo_after_transaction=transaction[4],
             transaction_timestamp=transaction[5],
-            user_id=transaction[6],
+            transaction_made_timestamp=transaction[6],
+            user_id=transaction[7],
         ) for transaction in output
     ]

@@ -45,6 +45,7 @@ def setup():
                 amount REAL NOT NULL,
                 saldo_after_transaction REAL NOT NULL,
                 transaction_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
+                transaction_made_timestamp INTEGER DEFAULT (strftime('%s', 'now')),
                 user_id INTEGER NOT NULL,
                 FOREIGN KEY(user_id) REFERENCES users(user_id)
             );

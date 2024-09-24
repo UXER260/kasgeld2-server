@@ -5,12 +5,8 @@ maar met wachtwoord hashes om in te loggen om een login token te verkrijgen in d
 Authenticatie toevoegen aan alle gebruikersgerelateerde endpoints
 ✅
 
-Gebruikers kunnen verandering van bijv saldo aanvragen met transactie verzoek
-
-
 Ruim random `raise` keywords op. Voornamelijk in 'authentication.py' en vervang ze met if statement checks.
 ✅
-
 
 Andere methode om sessie token te genereren, omdat huidige manier niet super veilig is. (Hash van een huidige timestamp)
 ✅
@@ -24,6 +20,8 @@ een whitelist die bijhoudt welke user accounts gewijzigd mogen worden.
 Als admin id (als primary key) niet in tabel voorkomt, dan heeft die admin toegang tot het
 wijzigen van elk user account (standaard)
 
+Gebruikers kunnen verandering van bijv saldo aanvragen met transactie verzoek
+🚫
 
 Authenticate code via email wanneer admin account wordt aangemaakt
 

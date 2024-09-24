@@ -35,6 +35,7 @@ class TransactionField(BaseModel):
     saldo_after_transaction: float
     title: str
     description: str
+    transaction_made_timestamp: int = None
 
 
 class RawTransactionData(BaseModel):
@@ -44,6 +45,7 @@ class RawTransactionData(BaseModel):
     amount: float
     saldo_after_transaction: float
     transaction_timestamp: int
+    transaction_made_timestamp: int
     user_id: int
 
 
